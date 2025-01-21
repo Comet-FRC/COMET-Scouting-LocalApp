@@ -68,7 +68,7 @@ events = {
     "3": "L3 Scored",
     "4": "L4 Scored",
 
-    "p": "Processor Score",
+    "p": "Processor",
     "n": "Net Scored"
 }
 
@@ -79,6 +79,7 @@ for i in range(4, len(qr_data), 3) :
     # if the next thing isn't an event store the location and break
     if not (qr_data[i] in events):
         location = i
+        print(location)
         break
     # otherwise decode the event and time 
     decoded += events[qr_data[i]] + ": \t" + str(decodeNumber(qr_data[i + 1:i + 3]) / 10.0) + " seconds\n"
@@ -95,7 +96,30 @@ positions = {
 
 decoded += "End Position: \t" + positions[qr_data[location]] + "\n"
 
-# decode the tags
+# decare existing tags
+tags = {
+    1: "Fast Robot",
+    2: "Good Auton",
+    3: "Good Driving",
+    4: "Good Defense",
+    5: "Good Intake",
+    6: "Efficient Scoring",
+
+    65: "Slow Robot",
+    66: "Bad Auton",
+    67: "Bad Driving",
+    68: "Bad Defense",
+    69: "Bad Intake",
+    70: "No Auton",
+    71: "Bad Scoring",
+}
+
+decoded += "Tags:\n"
+
+# decode the tags from the data
+for i in range(location + 1, len(qr_data)) :
+    decoded += tags[decodeNumber(qr_data[i])] + "\n"
+
 
 # print the decoded data
 print(decoded)
