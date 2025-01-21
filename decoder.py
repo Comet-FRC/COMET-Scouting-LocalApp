@@ -57,8 +57,8 @@ cv2.destroyAllWindows()
 decoded = ""
 
 # decode the inital match and team data
-decoded += "Match Number: " + str(decodeNumber(qr_data[0:1])) + "\n"
-decoded += "Team Number: " + str(decodeNumber(qr_data[1:4])) + "\n"
+decoded += "Match Number:\t" + str(decodeNumber(qr_data[0:1])) + "\n"
+decoded += "Team Number:\t" + str(decodeNumber(qr_data[1:4])) + "\n"
 
 # decode the game event data
 
@@ -68,14 +68,14 @@ events = {
     "3": "L3 Scored",
     "4": "L4 Scored",
 
-    "p": "Processor Scored",
+    "p": "Processor Score",
     "n": "Net Scored"
 }
 
 # create a variable to store the location of the next non game data
 location = 0
 
-for i in range(4, len(qr_data) - 1, 3) : 
+for i in range(4, len(qr_data), 3) : 
     # if the next thing isn't an event store the location and break
     if not (qr_data[i] in events):
         location = i
@@ -86,14 +86,14 @@ for i in range(4, len(qr_data) - 1, 3) :
 
 
 # decode the endgame data
-# positions = {
-#     "x": "None",
-#     "d": "Deep",
-#     "s": "Shallow",
-#     "k": "Park"
-# }
+positions = {
+    "x": "None",
+    "d": "Deep Climb",
+    "s": "Shallow Climb",
+    "k": "Park"
+}
 
-# decoded += "End Position: " + positions[qr_data[location]] + "\n"
+decoded += "End Position: \t" + positions[qr_data[location]] + "\n"
 
 # decode the tags
 
