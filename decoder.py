@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import pandas as pd
 
 def decodeNumber(data) :
   # create a variable to store decoded data
@@ -153,15 +152,8 @@ for i in range(location + 1, len(qr_data)) :
 # print the decoded data
 # print(decoded)
 
-# convert arrays into series of ndarrays
-# coral_scoring = pd.Series(coral_scoring, index = ["L1", "L2", "L3", "L4"], name = "Coral")
-# print(coral_scoring)
+# convert array into series of ndarrays
 
-# algae_scoring = pd.Series(algae_scoring, index = ["Processor", "Net"], name = "Algae")
-# print(algae_scoring)
-
-match_data = pd.Series(match_data, index = ["L1", "L2", "L3", "L4", "Processor", "Net", "End Position", "Tags"], name = ("Match " + str(match_num))) 
-print(match_data)
 
 
 # TODO: add the data to a database or find a place to put it
@@ -169,5 +161,47 @@ import pandas as pd
 
 #TODO: REMAINING STEPS
 # read existing csv (columns - data types, rows - matches)
+match_data = pd.Series(match_data, index = ["L1", "L2", "L3", "L4", "Processor", "Net", "End Position", "Tags"], name = ("Match " + str(match_num))) 
+print(match_data)
+
 # add new data to it
-# compile findings into
+
+def calculateScore() :
+    sum = 0
+    auton = False
+
+    
+
+    auton_scoring = {
+        "L1": 3,
+        "L2": 4,
+        "L3": 6,
+        "L4": 7,
+        "Processor": 6,
+        "Net": 4,
+    }
+
+    teleop_scoring = {
+        "L1": 2,
+        "L2": 3,
+        "L3": 4, 
+        "L4": 5,
+        "Processor": 6,
+        "Net": 4
+    }
+
+    def compute(key) :
+        if auton: 
+            return len(match_data.get(key = key)) * auton_scoring[key] 
+        else :
+            return len(match_data.get(key = key)) * teleop_scoring[key]
+
+    
+
+
+    return sum
+
+
+print(calculateScore())
+
+# compile findings into database
