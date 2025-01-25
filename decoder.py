@@ -1,5 +1,6 @@
-import math
 import cv2
+import numpy as np
+import pandas as pd
 
 def decodeNumber(data) :
   # create a variable to store decoded data
@@ -56,8 +57,10 @@ cv2.destroyAllWindows()
 # create a variable to store the decoded data
 decoded = ""
 
+match_num = decodeNumber(qr_data[0:1])
+
 # decode the inital match and team data
-decoded += "Match Number:\t" + str(decodeNumber(qr_data[0:1])) + "\n"
+decoded += "Match Number:\t" + str(match_num) + "\n"
 decoded += "Team Number:\t" + str(decodeNumber(qr_data[1:4])) + "\n"
 
 # decode the game event data
@@ -72,6 +75,14 @@ events = {
     "n": "Net Scored"
 }
 
+# create a temporary array for the coral scores
+
+match_data = [[]]
+
+for i in range(7) :
+    match_data.append([])
+
+
 # create a variable to store the location of the next non game data
 location = 0
 
@@ -82,8 +93,22 @@ for i in range(4, len(qr_data), 3) :
         print(location)
         break
     # otherwise decode the event and time 
-    decoded += events[qr_data[i]] + ": \t" + str(decodeNumber(qr_data[i + 1:i + 3]) / 10.0) + " seconds\n"
+    event_type = qr_data[i]
+    time = decodeNumber(qr_data[i + 1:i + 3]) / 10.0
 
+    # check if the event is a coral event
+    if event_type in "1234" :
+        match_data[int(event_type) - 1].append(time)
+    else :
+        match (event_type) :
+            case 'p': 
+                match_data[4].append(time)
+            case 'n': 
+                match_data[5].append(time)
+
+    # add the data to the series
+    
+    decoded += events[event_type] + ": \t" + str(time) + " seconds\n"
 
 
 # decode the endgame data
@@ -94,7 +119,11 @@ positions = {
     "k": "Park"
 }
 
-decoded += "End Position: \t" + positions[qr_data[location]] + "\n"
+end_pos = positions[qr_data[location]]
+
+decoded += "End Position: \t" + end_pos + "\n"
+
+match_data[6] = end_pos
 
 # decare existing tags
 tags = {
@@ -118,11 +147,24 @@ decoded += "Tags:\n"
 
 # decode the tags from the data
 for i in range(location + 1, len(qr_data)) :
-    decoded += tags[decodeNumber(qr_data[i])] + "\n"
+    tag_value = tags[decodeNumber(qr_data[i])]
+    match_data[7].append(tag_value)
+    decoded += tag_value + "\n"
 
 
 # print the decoded data
-print(decoded)
+# print(decoded)
+
+# convert arrays into series of ndarrays
+# coral_scoring = pd.Series(coral_scoring, index = ["L1", "L2", "L3", "L4"], name = "Coral")
+# print(coral_scoring)
+
+# algae_scoring = pd.Series(algae_scoring, index = ["Processor", "Net"], name = "Algae")
+# print(algae_scoring)
+
+match_data = pd.Series(match_data, index = ["L1", "L2", "L3", "L4", "Processor", "Net", "End Position", "Tags"], name = ("Match " + str(match_num))) 
+print(match_data)
+
 
 # TODO: add the data to a database or find a place to put it
 
