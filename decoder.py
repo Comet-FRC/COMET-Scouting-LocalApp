@@ -62,9 +62,7 @@ match_num = decodeNumber(qr_data[0:1])
 # decode the inital match and team data
 decoded += "Match Number:\t" + str(match_num) + "\n"
 decoded += "Team Number:\t" + str(decodeNumber(qr_data[1:4])) + "\n"
-
 # decode the game event data
-
 events = {
     "1": "L1 Scored",
     "2": "L2 Scored",
@@ -167,4 +165,9 @@ print(match_data)
 
 
 # TODO: add the data to a database or find a place to put it
+import pandas as pd
 
+#TODO: REMAINING STEPS
+# read existing csv (columns - data types, rows - matches)
+# add new data to it
+# compile findings into
