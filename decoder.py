@@ -56,11 +56,17 @@ cv2.destroyAllWindows()
 # create a variable to store the decoded data
 decoded = ""
 
-match_num = decodeNumber(qr_data[0:1])
 
-# decode the inital match and team data
+# store the initial game data
+scout_initals = qr_data[0:3]
+match_num = decodeNumber(qr_data[3])
+team_num = decodeNumber(qr_data[4:7])
+
+
+# decode the inital scout, match, and team data
+decoded += "Scout Initals:\t" + qr_data[0:3]
 decoded += "Match Number:\t" + str(match_num) + "\n"
-decoded += "Team Number:\t" + str(decodeNumber(qr_data[1:4])) + "\n"
+decoded += "Team Number:\t" + str(decodeNumber(qr_data[4:7])) + "\n"
 # decode the game event data
 events = {
     "1": "L1 Scored",
@@ -69,25 +75,26 @@ events = {
     "4": "L4 Scored",
 
     "p": "Processor",
-    "n": "Net Scored"
+    "n": "Net Scored",
+    "t": "Auton Ended"
 }
 
-# create a temporary array for the coral scores
+# create an array to store the data collected during the match
 
 match_data = [[]]
 
-for i in range(7) :
+for i in range(8) :
     match_data.append([])
 
 
 # create a variable to store the location of the next non game data
 location = 0
 
-for i in range(4, len(qr_data), 3) : 
+for i in range(7, len(qr_data), 3) : 
     # if the next thing isn't an event store the location and break
     if not (qr_data[i] in events):
         location = i
-        print(location)
+        # print(location)
         break
     # otherwise decode the event and time 
     event_type = qr_data[i]
@@ -102,6 +109,8 @@ for i in range(4, len(qr_data), 3) :
                 match_data[4].append(time)
             case 'n': 
                 match_data[5].append(time)
+            case 't':
+                match_data[8] = time
 
     # add the data to the series
     
@@ -152,24 +161,44 @@ for i in range(location + 1, len(qr_data)) :
 # print the decoded data
 # print(decoded)
 
-# convert array into series of ndarrays
-
-
-
-# TODO: add the data to a database or find a place to put it
+# convert match data into pandas Series
 import pandas as pd
 
-#TODO: REMAINING STEPS
-# read existing csv (columns - data types, rows - matches)
-match_data = pd.Series(match_data, index = ["L1", "L2", "L3", "L4", "Processor", "Net", "End Position", "Tags"], name = ("Match " + str(match_num))) 
+match_data = pd.Series(match_data, index = ["L1", "L2", "L3", "L4", "Processor", "Net", "End Position", "Tags", "Auton Ended"], name = ("Match " + str(match_num))) 
+
 print(match_data)
+
+# create the file path
+file_path = f"scouting-data/{team_num}.csv"
+
+# check for existing csv
+try:
+    # get the data in the existing dataframe
+    team_data = pd.read_csv(file_path, index_col="Match Number")
+
+    # add the new value to the dataframe
+    team_data.loc[match_num] = match_data
+
+    # replace the csv file
+    data_file = team_data.to_csv(file_path, index_label="Match Number")
+except FileNotFoundError: 
+    print("file does not exist, creating a new one")
+    # create a new csv file for the given team with the current match data
+    team_data = pd.DataFrame([match_data], index=[match_num])
+    data_file = team_data.to_csv(file_path, index_label="Match Number")
+
+
+
+
+# print(team_data)
+
+# check if the file exists, if it does then 
 
 # add new data to it
 
 def calculateScore() :
     sum = 0
-    auton = False
-
+    auton_time = match_data.iloc[8]
     
 
     auton_scoring = {
@@ -190,13 +219,23 @@ def calculateScore() :
         "Net": 4
     }
 
+    # multiply the number of values of match_data less than the auton time by the auton score multiplier
+    match_data.iloc[0:7]
+        
+
+    # do the same for the values greater than the auton time by the auton score multiplier
+
+
+    # loop through the values of match_data
+    
+
+
     def compute(key) :
-        if auton: 
+        if auton_time > match_data.get(key = key): 
             return len(match_data.get(key = key)) * auton_scoring[key] 
         else :
             return len(match_data.get(key = key)) * teleop_scoring[key]
 
-    
 
 
     return sum
@@ -204,4 +243,53 @@ def calculateScore() :
 
 print(calculateScore())
 
-# compile findings into database
+
+
+# load connection to database
+# import mysql.connector
+
+# create connection object
+# mydb = mysql.connector.connect(
+#     host = "localhost",
+#     user = "root",
+#     password = "COM3T-5cou7!ng-2025"
+# )
+
+# print the connection object
+# print(mydb)
+
+# create a cursor to execute SQL statements
+# cursor = mydb.cursor()
+
+# try to create a team data database
+# try:
+#     cursor.execute("CREATE DATABASE team_data;")
+# except mysql.connector.errors.DatabaseError: 
+#     print("database team_data already exists");
+
+# make sure that we're using it
+# cursor.execute("USE team_data;")
+
+team_data_metrics = {
+    "Team Num": "INTEGER",
+    "OPR": "INTEGER",
+    "Points Per Game": "FLOAT",
+    "Matches": "IDK"
+}
+
+# try to create a table for that team's data
+# cursor.execute(f"CREATE TABLE IF NOT EXISTS {match_num} ")
+
+    
+
+
+
+
+# # open the file and work on it
+# with open(data_file, mode='w', newline='') as csvfile:
+#     # create a csv file writer
+#     writer = csv.writer(csvfile)
+
+#     # write data to the csv file
+#     writer.writerows([["hello world"] * 8] * 2)
+
