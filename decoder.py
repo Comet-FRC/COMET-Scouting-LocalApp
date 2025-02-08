@@ -13,7 +13,9 @@ def decodeNumber(data) :
   # return the decoded number
   return decoded
 
-  
+
+
+# get the qr code from the camera
 
 # initalize the camera and qrcode detector
 cap = cv2.VideoCapture(0)
@@ -26,6 +28,10 @@ qr_data = ""
 while True:
     # read the currect camera image
     ret, image = cap.read()
+
+    # read the test image
+    # ret = True
+    # image = cv2.imread("testcode.png")
 
     #  check if frame was read successfully
     if ret:
@@ -53,20 +59,31 @@ while True:
 cap.release()
 cv2.destroyAllWindows()
 
-# create a variable to store the decoded data
-decoded = ""
 
+# get the data from the captured qr code
+
+# create a string variable to temporarily store the decoded data
+decoded = ""
 
 # store the initial game data
 scout_initals = qr_data[0:3]
 match_num = decodeNumber(qr_data[3])
 team_num = decodeNumber(qr_data[4:7])
+alliance_color = qr_data[7]
 
+
+colors = {
+    "r": "Red",
+    "b": "Blue"
+}
 
 # decode the inital scout, match, and team data
-decoded += "Scout Initals:\t" + qr_data[0:3]
-decoded += "Match Number:\t" + str(match_num) + "\n"
-decoded += "Team Number:\t" + str(decodeNumber(qr_data[4:7])) + "\n"
+decoded += f"Scout Initals:\t{scout_initals}"
+decoded += f"Match Number:\t{match_num}\n"
+decoded += f"Team Number:\t{team_num}\n"
+decoded += f"Alliance Color:\t{colors[alliance_color]}"
+print(f"Alliance Color:\t{colors[alliance_color]}")
+
 # decode the game event data
 events = {
     "1": "L1 Scored",
@@ -80,21 +97,17 @@ events = {
 }
 
 # create an array to store the data collected during the match
+match_data = [[] for _ in range(13)]
 
-match_data = [[]]
-
-for i in range(8) :
-    match_data.append([])
-
+match_data[9] = colors[alliance_color]
 
 # create a variable to store the location of the next non game data
 location = 0
 
-for i in range(7, len(qr_data), 3) : 
+for i in range(8, len(qr_data), 3) : 
     # if the next thing isn't an event store the location and break
     if not (qr_data[i] in events):
         location = i
-        # print(location)
         break
     # otherwise decode the event and time 
     event_type = qr_data[i]
@@ -158,13 +171,76 @@ for i in range(location + 1, len(qr_data)) :
     decoded += tag_value + "\n"
 
 
+# calculate the points scored 
+auton_points = 0
+teleop_points = 0
+
+# get when auton ended
+try :
+    auton_ended = int(match_data[8])
+except TypeError :
+    auton_ended = 100000000
+
+# store point values
+point_values = {
+    "Auton L1": 3,
+    "Auton L2": 4,
+    "Auton L3": 6,
+    "Auton L4": 7,
+
+    "Teleop L1": 2,
+    "Teleop L2": 3,
+    "Teleop L3": 4,
+    "Teleop L4": 5,
+
+    "Processor": 6,
+    "Net": 4,
+
+    "None": 0,
+    "Park": 2,
+    "Shallow Climb": 6,
+    "Deep Climb": 12
+}
+
+# coral points
+for i in range(4) :
+    for j in match_data[i] :
+        if j < auton_ended :
+            auton_points += point_values[f"Auton L{i + 1}"]
+        else :
+            teleop_points += point_values[f"Teleop L{i + 1}"]
+
+        
+# processor points
+for i in match_data[4] :
+    if i < auton_ended :
+        auton_points += point_values["Processor"]
+    else :
+        teleop_points += point_values["Processor"]
+
+# net points
+for i in match_data[5] :
+    if i < auton_ended :
+        auton_points += point_values["Net"]
+    else :
+        teleop_points += point_values["Net"]
+    
+# end position
+
+teleop_points += point_values[match_data[6]]
+
+print(auton_points)
+print(teleop_points)
+
+
+
 # print the decoded data
 # print(decoded)
 
 # convert match data into pandas Series
 import pandas as pd
 
-match_data = pd.Series(match_data, index = ["L1", "L2", "L3", "L4", "Processor", "Net", "End Position", "Tags", "Auton Ended"], name = ("Match " + str(match_num))) 
+match_data = pd.Series(match_data, index = ["L1", "L2", "L3", "L4", "Processor", "Net", "End Position", "Tags", "Auton Ended", "Alliance Color", "Points Scored", "Auton Points", "Teleop Points"], name = ("Match " + str(match_num))) 
 
 print(match_data)
 
@@ -186,15 +262,6 @@ except FileNotFoundError:
     # create a new csv file for the given team with the current match data
     team_data = pd.DataFrame([match_data], index=[match_num])
     data_file = team_data.to_csv(file_path, index_label="Match Number")
-
-
-
-
-# print(team_data)
-
-# check if the file exists, if it does then 
-
-# add new data to it
 
 def calculateScore() :
     sum = 0
@@ -239,57 +306,3 @@ def calculateScore() :
 
 
     return sum
-
-
-print(calculateScore())
-
-
-
-# load connection to database
-# import mysql.connector
-
-# create connection object
-# mydb = mysql.connector.connect(
-#     host = "localhost",
-#     user = "root",
-#     password = "COM3T-5cou7!ng-2025"
-# )
-
-# print the connection object
-# print(mydb)
-
-# create a cursor to execute SQL statements
-# cursor = mydb.cursor()
-
-# try to create a team data database
-# try:
-#     cursor.execute("CREATE DATABASE team_data;")
-# except mysql.connector.errors.DatabaseError: 
-#     print("database team_data already exists");
-
-# make sure that we're using it
-# cursor.execute("USE team_data;")
-
-team_data_metrics = {
-    "Team Num": "INTEGER",
-    "OPR": "INTEGER",
-    "Points Per Game": "FLOAT",
-    "Matches": "IDK"
-}
-
-# try to create a table for that team's data
-# cursor.execute(f"CREATE TABLE IF NOT EXISTS {match_num} ")
-
-    
-
-
-
-
-# # open the file and work on it
-# with open(data_file, mode='w', newline='') as csvfile:
-#     # create a csv file writer
-#     writer = csv.writer(csvfile)
-
-#     # write data to the csv file
-#     writer.writerows([["hello world"] * 8] * 2)
-
