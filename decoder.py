@@ -14,7 +14,6 @@ def decodeNumber(data) :
   return decoded
 
 
-
 # get the qr code from the camera
 
 # initalize the camera and qrcode detector
@@ -99,10 +98,40 @@ events = {
 # create an array to store the data collected during the match
 match_data = [[] for _ in range(13)]
 
-match_data[9] = colors[alliance_color]
+import pandas as pd
+
+match_data = pd.Series({
+    "L1": [],
+    "L2": [],
+    "L3": [],
+    "L4": [],
+    "Processor": [],
+    "Net": [],
+    "End Position": "",
+    "Tags": [],
+    "Auton Ended": 210,
+    "Alliance Color": "",
+    "Points Scored": 0,
+    "Auton Points": 0,
+    "Teleop Points": 0    
+})
+
+match_data["Alliance Color"] = colors[alliance_color]
+# match_data[9] = colors[alliance_color]
+
 
 # create a variable to store the location of the next non game data
 location = 0
+
+events = {
+    "1": "L1",
+    "2": "L2",
+    "3": "L3",
+    "4": "L4",
+    "p": "Processor",
+    "n": "Net",
+    "t": "Auton Ended"
+}
 
 for i in range(8, len(qr_data), 3) : 
     # if the next thing isn't an event store the location and break
@@ -113,17 +142,11 @@ for i in range(8, len(qr_data), 3) :
     event_type = qr_data[i]
     time = decodeNumber(qr_data[i + 1:i + 3]) / 10.0
 
-    # check if the event is a coral event
-    if event_type in "1234" :
-        match_data[int(event_type) - 1].append(time)
+    # check if teh event is the auton time
+    if event_type == 't' :
+        match_data["Auton Ended"] = time
     else :
-        match (event_type) :
-            case 'p': 
-                match_data[4].append(time)
-            case 'n': 
-                match_data[5].append(time)
-            case 't':
-                match_data[8] = time
+        match_data[events[event_type]].append(time)
 
     # add the data to the series
     
@@ -142,7 +165,7 @@ end_pos = positions[qr_data[location]]
 
 decoded += "End Position: \t" + end_pos + "\n"
 
-match_data[6] = end_pos
+match_data["End Position"] = end_pos
 
 # decare existing tags
 tags = {
@@ -167,9 +190,10 @@ decoded += "Tags:\n"
 # decode the tags from the data
 for i in range(location + 1, len(qr_data)) :
     tag_value = tags[decodeNumber(qr_data[i])]
-    match_data[7].append(tag_value)
+    match_data["Tags"].append(tag_value)
     decoded += tag_value + "\n"
 
+print(match_data)
 
 # calculate the points scored 
 auton_points = 0
@@ -177,7 +201,7 @@ teleop_points = 0
 
 # get when auton ended
 try :
-    auton_ended = int(match_data[8])
+    auton_ended = int(match_data["Auton Ended"])
 except TypeError :
     auton_ended = 100000000
 
@@ -203,34 +227,29 @@ point_values = {
 }
 
 # coral points
-for i in range(4) :
+for i in match_data.index[:4] :
     for j in match_data[i] :
         if j < auton_ended :
-            auton_points += point_values[f"Auton L{i + 1}"]
+            auton_points += point_values[f"Auton {i}"]
         else :
-            teleop_points += point_values[f"Teleop L{i + 1}"]
+            teleop_points += point_values[f"Teleop {i}"]
 
         
 # processor points
-for i in match_data[4] :
-    if i < auton_ended :
-        auton_points += point_values["Processor"]
-    else :
-        teleop_points += point_values["Processor"]
-
-# net points
-for i in match_data[5] :
-    if i < auton_ended :
-        auton_points += point_values["Net"]
-    else :
-        teleop_points += point_values["Net"]
+for i in match_data.index[4:6] :
+    for j in match_data[i] :
+        if j < auton_ended :
+            auton_points += point_values[i]
+        else :
+            teleop_points += point_values[i]
     
 # end position
 
 teleop_points += point_values[match_data[6]]
 
-print(auton_points)
-print(teleop_points)
+match_data["Auton Points"] = auton_points
+match_data["Teleop Points"] = teleop_points
+match_data["Points Scored"] = auton_points + teleop_points
 
 
 
@@ -238,9 +257,6 @@ print(teleop_points)
 # print(decoded)
 
 # convert match data into pandas Series
-import pandas as pd
-
-match_data = pd.Series(match_data, index = ["L1", "L2", "L3", "L4", "Processor", "Net", "End Position", "Tags", "Auton Ended", "Alliance Color", "Points Scored", "Auton Points", "Teleop Points"], name = ("Match " + str(match_num))) 
 
 print(match_data)
 
