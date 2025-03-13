@@ -16,7 +16,7 @@ def decodeNumber(data) :
 
 # get the qr code from the camera
 
-# initalize the camera and qrcode detector
+# initialize the camera and qrcode detector
 cap = cv2.VideoCapture(0)
 detector = cv2.QRCodeDetector()
 
@@ -64,39 +64,27 @@ cv2.destroyAllWindows()
 # create a string variable to temporarily store the decoded data
 decoded = ""
 
-# store the initial game data
-scout_initals = qr_data[0:3]
-match_num = decodeNumber(qr_data[3])
-team_num = decodeNumber(qr_data[4:7])
-alliance_color = qr_data[7]
-
 
 colors = {
     "r": "Red",
     "b": "Blue"
 }
 
-# decode the inital scout, match, and team data
-decoded += f"Scout Initals:\t{scout_initals}"
-decoded += f"Match Number:\t{match_num}\n"
-decoded += f"Team Number:\t{team_num}\n"
-decoded += f"Alliance Color:\t{colors[alliance_color]}"
-print(f"Alliance Color:\t{colors[alliance_color]}")
-
 # decode the game event data
 events = {
-    "1": "L1 Scored",
-    "2": "L2 Scored",
-    "3": "L3 Scored",
-    "4": "L4 Scored",
+    "1": "L1",
+    "2": "L2",
+    "3": "L3",
+    "4": "L4",
 
     "p": "Processor",
-    "n": "Net Scored",
+    "n": "Net",
+    "r": "Algae Removed",
     "t": "Auton Ended"
 }
 
 # create an array to store the data collected during the match
-match_data = [[] for _ in range(13)]
+match_data = [[] for _ in range(14)]
 
 import pandas as pd
 
@@ -107,33 +95,51 @@ match_data = pd.Series({
     "L4": [],
     "Processor": [],
     "Net": [],
+    "Algae Removed": [],
+    "Auton Leave": False,
     "End Position": "",
     "Tags": [],
     "Auton Ended": 210,
     "Alliance Color": "",
     "Points Scored": 0,
     "Auton Points": 0,
-    "Teleop Points": 0    
+    "Teleop Points": 0,
+    "Scout Initials": ""
 })
 
+# store the initial game data
+scout_initials = qr_data[0:3]
+match_num = decodeNumber(qr_data[3])
+team_num = decodeNumber(qr_data[4:7])
+auton_left = qr_data[7] == 'y'
+alliance_color = qr_data[8]
+
+
+decoded += f"Scout Initials:\t{scout_initials}\n"
+decoded += f"Match Number:\t{match_num}\n"
+decoded += f"Team Number:\t{team_num}\n"
+decoded += f"Auton Leave:\t{auton_left}\n"
+decoded += f"Alliance Color:\t{colors[alliance_color]}\n"
+
+match_data["Scout Initials"] = scout_initials
+match_data["Auton Leave"] = auton_left
 match_data["Alliance Color"] = colors[alliance_color]
-# match_data[9] = colors[alliance_color]
 
 
 # create a variable to store the location of the next non game data
 location = 0
 
-events = {
-    "1": "L1",
-    "2": "L2",
-    "3": "L3",
-    "4": "L4",
-    "p": "Processor",
-    "n": "Net",
-    "t": "Auton Ended"
-}
+# events = {
+#     "1": "L1",
+#     "2": "L2",
+#     "3": "L3",
+#     "4": "L4",
+#     "p": "Processor",
+#     "n": "Net",
+#     "t": "Auton Ended"
+# }
 
-for i in range(8, len(qr_data), 3) : 
+for i in range(9, len(qr_data), 3) : 
     # if the next thing isn't an event store the location and break
     if not (qr_data[i] in events):
         location = i
@@ -163,8 +169,6 @@ positions = {
 
 end_pos = positions[qr_data[location]]
 
-decoded += "End Position: \t" + end_pos + "\n"
-
 match_data["End Position"] = end_pos
 
 # decare existing tags
@@ -185,15 +189,12 @@ tags = {
     71: "Bad Scoring",
 }
 
-decoded += "Tags:\n"
 
 # decode the tags from the data
 for i in range(location + 1, len(qr_data)) :
     tag_value = tags[decodeNumber(qr_data[i])]
     match_data["Tags"].append(tag_value)
     decoded += tag_value + "\n"
-
-print(match_data)
 
 # calculate the points scored 
 auton_points = 0
@@ -218,13 +219,20 @@ point_values = {
     "Teleop L4": 5,
 
     "Processor": 6,
+    "Algae Removed": 0,
     "Net": 4,
+
+    "Auton Leave": 3,
 
     "None": 0,
     "Park": 2,
     "Shallow Climb": 6,
     "Deep Climb": 12
 }
+
+# auton leave
+if match_data["Auton Leave"] :
+    auton_points += point_values["Auton Leave"]
 
 # coral points
 for i in match_data.index[:4] :
@@ -245,80 +253,175 @@ for i in match_data.index[4:6] :
     
 # end position
 
-teleop_points += point_values[match_data[6]]
+teleop_points += point_values[match_data["End Position"]]
 
 match_data["Auton Points"] = auton_points
 match_data["Teleop Points"] = teleop_points
 match_data["Points Scored"] = auton_points + teleop_points
 
-
-
 # print the decoded data
-# print(decoded)
-
-# convert match data into pandas Series
-
 print(match_data)
 
-# create the file path
-file_path = f"scouting-data/{team_num}.csv"
 
-# check for existing csv
+# create the file path
+file_path = f"scouting-data/{team_num}.json"
+
+# check for existing json
 try:
     # get the data in the existing dataframe
-    team_data = pd.read_csv(file_path, index_col="Match Number")
+    team_data = pd.read_json(file_path, orient='index')
 
     # add the new value to the dataframe
     team_data.loc[match_num] = match_data
 
-    # replace the csv file
-    data_file = team_data.to_csv(file_path, index_label="Match Number")
+    # replace the json file
+    data_file = team_data.to_json(file_path, index=True, orient='index', indent=2)
 except FileNotFoundError: 
     print("file does not exist, creating a new one")
-    # create a new csv file for the given team with the current match data
-    team_data = pd.DataFrame([match_data], index=[match_num])
-    data_file = team_data.to_csv(file_path, index_label="Match Number")
+    # create a new json file for the given team with the current match data
+    team_data = pd.DataFrame([match_data], [match_num])
+    data_file = team_data.to_json(file_path, index=True, orient='index', indent=2)
 
-def calculateScore() :
-    sum = 0
-    auton_time = match_data.iloc[8]
-    
+# add the team's score to the match match data JSON file
 
-    auton_scoring = {
-        "L1": 3,
-        "L2": 4,
-        "L3": 6,
-        "L4": 7,
-        "Processor": 6,
-        "Net": 4,
-    }
+exit()
 
-    teleop_scoring = {
-        "L1": 2,
-        "L2": 3,
-        "L3": 4, 
-        "L4": 5,
-        "Processor": 6,
-        "Net": 4
-    }
+# store indexes of teams that we are getting data for
+teams = {
+    1234: 0,
+    1880: 1,
+    1885: 2,
+    1886: 3,
+    1000: 4
+}
 
-    # multiply the number of values of match_data less than the auton time by the auton score multiplier
-    match_data.iloc[0:7]
-        
+# turn the matches JSON to a dataframe
 
-    # do the same for the values greater than the auton time by the auton score multiplier
+try :
+    matches = pd.read_json("matches.json", orient='columns')
+    # check if the match data exists in the JSON file
+    if match_num in matches.index :
+        # add the team's particpation to the JSON file
+        matches.loc[match_num, f"{match_data["Alliance Color"]} Alliance Teams"][teams[team_num]] = 1
+
+        # add the team's score to the JSON file
+        matches.loc[match_num, f"{match_data["Alliance Color"]} Alliance Score"] += match_data["Points Scored"]
+    else :
+        # add the data to a new Series in the JSON file
+        temp = pd.Series([[0] * len(teams), [0] * len(teams), 0, 0], ["Red Alliance Teams", "Blue Alliance Teams", "Red Alliance Score", "Blue Alliance Score"])
+
+        # add score and participation of current team
+        temp.loc[f"{match_data["Alliance Color"]} Alliance Teams"][teams[team_num]] = 1
+        temp.loc[f"{match_data["Alliance Color"]} Alliance Score"] += match_data["Points Scored"]
+
+        # add the Series to the JSON file
+        matches.loc[match_num] = temp
+
+    # replace the JSON file
+    matches_file = matches.to_json("matches.json", orient='columns', indent=2)
+
+except FileNotFoundError:
+    print("match data file does not exist, creating a new one")
+    # create a new JSON file for match data
+
+    # print(point_values)
+    temp = pd.Series([[0] * len(teams), [0] * len(teams), 0, 0], ["Red Alliance Teams", "Blue Alliance Teams", "Red Alliance Score", "Blue Alliance Score"])
+
+    # add participation of current team
+    temp.loc[f"{match_data["Alliance Color"]} Alliance Teams"][teams[team_num]] = 1
+
+    # add score of current team
+    temp.loc[f"{match_data["Alliance Color"]} Alliance Score"] += match_data["Points Scored"]
+
+    # create dataframe and JSON file
+    matches = pd.DataFrame([temp], [match_num])
+    matches_file = matches.to_json("matches.json", orient='columns', indent=2)
+
+matches = pd.read_json("matches.json", orient='columns')
+
+# get data from the schedule file
+schedule = pd.read_json("schedule.json", orient='columns')
+
+# get data from the schedule file
+schedule = pd.read_json("schedule.json", orient='columns')
+
+# create array of validated matches
+validated_matches = []
+
+# create an array of validated scores
+validated_scores = []
+
+exit()
+
+# loop through matches file
+for i in matches.index :
+    # check if all teams have been scouted
+    if (i in schedule.index) :
+        if (np.array(matches.loc[i, "Red Alliance Teams"]) == np.array(schedule.loc[i, "Red Alliance Teams"])).all() :
+            # store validated match and score
+            validated_matches.append(matches.loc[i, "Red Alliance Teams"])
+            validated_scores.append(matches.loc[i, "Red Alliance Score"])
+
+        if (np.array(matches.loc[i, "Blue Alliance Teams"]) == np.array(schedule.loc[i, "Blue Alliance Teams"])).all() :
+            validated_matches.append(matches.loc[i, "Blue Alliance Teams"])
+            validated_scores.append(matches.loc[i, "Blue Alliance Score"])
 
 
-    # loop through the values of match_data
-    
+
+validated_matches = np.array(validated_matches)
+validated_scores = np.array(validated_scores)
+
+transposed = validated_matches.T
 
 
-    def compute(key) :
-        if auton_time > match_data.get(key = key): 
-            return len(match_data.get(key = key)) * auton_scoring[key] 
-        else :
-            return len(match_data.get(key = key)) * teleop_scoring[key]
+# print(validated_matches)
+# print(transposed)
+# print(validated_scores)
+
+print()
+testMatches = np.array([[1, 1, 1, 0, 0, 0],
+                        [1, 0, 1, 0, 1, 0],
+                        [0, 1, 1, 1, 0, 0],
+                        [1, 0, 0, 0, 1, 1],
+                        [0, 1, 0, 1, 0, 1],
+                        [0, 1, 1, 1, 0, 0],
+                        [1, 0, 0, 0, 1, 1]])
+
+testScores = np.array([15, 19, 15, 15, 14, 15, 16])
+
+validated_matches = testMatches
+transposed = validated_matches.transpose()  
+validated_scores = testScores
+
+X = validated_matches
+y = testScores
+
+print(X)
+print(y)
+
+XT_X = np.dot(X.T, X)
+XT_y = np.dot(X.T, y)
+theta = np.linalg.inv(XT_X).dot(XT_y)
+
+print(theta)
+
+exit()
+
+print(validated_matches)
+print(transposed)
+
+
+print(transposed @ validated_matches)
+
+exit()
+
+print(transposed @ validated_scores)    
+
+# normal_equation = np.linalg.inv(transposed @ validated_matches) @ transposed @ validated_scores
+
+print(np.linalg.inv(transposed @ validated_matches))
+
+# print(matches)
 
 
 
-    return sum
