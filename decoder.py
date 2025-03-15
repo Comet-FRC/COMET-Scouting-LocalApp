@@ -17,7 +17,7 @@ def decodeNumber(data) :
 # get the qr code from the camera
 
 # initialize the camera and qrcode detector
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 detector = cv2.QRCodeDetector()
 
 # create a variable to store qr code data
@@ -284,34 +284,59 @@ except FileNotFoundError:
 
 # add the team's score to the match match data JSON file
 
-exit()
+# exit()
 
 # store indexes of teams that we are getting data for
 teams = {
-    1234: 0,
-    1880: 1,
-    1885: 2,
-    1886: 3,
-    1000: 4
+    339: 0,
+    404: 0,
+    449: 0,
+    623: 0,
+    888: 0,
+    1111: 0,
+    1727: 0,
+    1811: 0,
+    1885: 0,
+    2106: 0,
+    2199: 0,
+    2377: 0,
+    2421: 0,
+    2537: 0,
+    3714: 0,
+    3748: 0,
+    3793: 0,
+    4464: 0,
+    4541: 0,
+    5587: 0,
+    7770: 0,
+    7886: 0,
+    8622: 0,
+    9403: 0,
+    9684: 0,
+    9709: 0,
+    10224: 0,
+    10449: 0,
+    10679: 0
 }
 
 # turn the matches JSON to a dataframe
-
 try :
     matches = pd.read_json("matches.json", orient='columns')
+
+    exit()
     # check if the match data exists in the JSON file
     if match_num in matches.index :
-        # add the team's particpation to the JSON file
-        matches.loc[match_num, f"{match_data["Alliance Color"]} Alliance Teams"][teams[team_num]] = 1
+        # add the team's participation to the JSON file
+        matches.loc[match_num, f"{match_data["Alliance Color"]} Alliance Teams"][team_num] = 1
 
         # add the team's score to the JSON file
         matches.loc[match_num, f"{match_data["Alliance Color"]} Alliance Score"] += match_data["Points Scored"]
     else :
         # add the data to a new Series in the JSON file
-        temp = pd.Series([[0] * len(teams), [0] * len(teams), 0, 0], ["Red Alliance Teams", "Blue Alliance Teams", "Red Alliance Score", "Blue Alliance Score"])
+        temp = pd.Series([teams, teams, 0, 0], ["Red Alliance Teams", "Blue Alliance Teams", "Red Alliance Score", "Blue Alliance Score"])
 
         # add score and participation of current team
-        temp.loc[f"{match_data["Alliance Color"]} Alliance Teams"][teams[team_num]] = 1
+        temp.loc[f"{match_data["Alliance Color"]} Alliance Teams"][team_num] = 1
         temp.loc[f"{match_data["Alliance Color"]} Alliance Score"] += match_data["Points Scored"]
 
         # add the Series to the JSON file
@@ -325,10 +350,10 @@ except FileNotFoundError:
     # create a new JSON file for match data
 
     # print(point_values)
-    temp = pd.Series([[0] * len(teams), [0] * len(teams), 0, 0], ["Red Alliance Teams", "Blue Alliance Teams", "Red Alliance Score", "Blue Alliance Score"])
+    temp = pd.Series([teams, teams, 0, 0], ["Red Alliance Teams", "Blue Alliance Teams", "Red Alliance Score", "Blue Alliance Score"])
 
     # add participation of current team
-    temp.loc[f"{match_data["Alliance Color"]} Alliance Teams"][teams[team_num]] = 1
+    temp.loc[f"{match_data["Alliance Color"]} Alliance Teams"][team_num] = 1
 
     # add score of current team
     temp.loc[f"{match_data["Alliance Color"]} Alliance Score"] += match_data["Points Scored"]
@@ -337,10 +362,10 @@ except FileNotFoundError:
     matches = pd.DataFrame([temp], [match_num])
     matches_file = matches.to_json("matches.json", orient='columns', indent=2)
 
-matches = pd.read_json("matches.json", orient='columns')
 
-# get data from the schedule file
-schedule = pd.read_json("schedule.json", orient='columns')
+exit()
+
+matches = pd.read_json("matches.json", orient='columns')
 
 # get data from the schedule file
 schedule = pd.read_json("schedule.json", orient='columns')
@@ -367,7 +392,6 @@ for i in matches.index :
             validated_scores.append(matches.loc[i, "Blue Alliance Score"])
 
 
-
 validated_matches = np.array(validated_matches)
 validated_scores = np.array(validated_scores)
 
@@ -378,14 +402,13 @@ transposed = validated_matches.T
 # print(transposed)
 # print(validated_scores)
 
-print()
-testMatches = np.array([[1, 1, 1, 0, 0, 0],
-                        [1, 0, 1, 0, 1, 0],
-                        [0, 1, 1, 1, 0, 0],
-                        [1, 0, 0, 0, 1, 1],
-                        [0, 1, 0, 1, 0, 1],
-                        [0, 1, 1, 1, 0, 0],
-                        [1, 0, 0, 0, 1, 1]])
+# testMatches = np.array([[1, 1, 1, 0, 0, 0],
+#                         [1, 0, 1, 0, 1, 0],
+#                         [0, 1, 1, 1, 0, 0],
+#                         [1, 0, 0, 0, 1, 1],
+#                         [0, 1, 0, 1, 0, 1],
+#                         [0, 1, 1, 1, 0, 0],
+#                         [1, 0, 0, 0, 1, 1]])
 
 testScores = np.array([15, 19, 15, 15, 14, 15, 16])
 
