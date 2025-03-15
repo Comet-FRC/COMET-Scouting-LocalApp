@@ -23,6 +23,7 @@ while True:
     
 
 if "Common" not in stat_to_plot:
+    print("Opening window...")
     # Plot bar chart
     plt.figure(figsize=(10, 5))
     stats[stat_to_plot].plot(kind="bar")
@@ -34,8 +35,9 @@ if "Common" not in stat_to_plot:
     plt.xticks(rotation=45)
     plt.grid(axis="y", linestyle="--", alpha=0.7)
 else:
+    print("Displaying information in the console... though you should just view the .json files for this")
     for i in stats[stat_to_plot].index:
-        print(f"{i}:", stats[stat_to_plot].loc[i])
+        print(f"{i}:", stats[stat_to_plot].loc[i] if stat_to_plot == "Common End Position" else stats[stat_to_plot].loc[i]['0'])
 
     
 plt.show()
