@@ -29,12 +29,12 @@ for filename in os.listdir(data_dir):
     new_names = [f"Average {col}" for col in columns_to_avg.columns]
 
     # getting two most common tags
-    new_names.append("Average Tags")
+    new_names.append("Common Tags")
     twoCommonTags = team_data["Tags"].mode()[:2]
     avg_values = np.append(avg_values, twoCommonTags)
 
     # average end position
-    new_names.append("Average End Position")
+    new_names.append("Common End Position")
     end_pos = team_data["End Position"].mode()[0]
     avg_values = np.append(avg_values, end_pos)
      
@@ -73,8 +73,3 @@ print(stats.head())
 
 # save to JSON for further processing
 stats.to_json("team_stats.json", orient="index", indent=2)
-
-#TODO: Matplotlib analysis here
-import matplotlib
-
-
