@@ -322,11 +322,12 @@ def run() :
         10679: 0
     }
 
+    return
+
     # turn the matches JSON to a dataframe
     try :
         matches = pd.read_json("matches.json", orient='columns')
 
-        exit()
         # check if the match data exists in the JSON file
         if match_num in matches.index :
             # add the team's participation to the JSON file
@@ -365,8 +366,9 @@ def run() :
         matches = pd.DataFrame([temp], [match_num])
         matches_file = matches.to_json("matches.json", orient='columns', indent=2)
 
-
+    
     exit()
+    
 
     matches = pd.read_json("matches.json", orient='columns')
 
