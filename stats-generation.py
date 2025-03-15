@@ -46,6 +46,7 @@ for filename in os.listdir(data_dir):
      
     # get l1, l2, l3, l4 data out of team_data since columns_to_avg contains transformed data
     coral_points = 0
+    teleop_coral_p = 0
     for col in team_data.iloc[:, [0, 1, 2, 3]].columns:
         for i in range(len(team_data[col])):
             values = team_data[col].iloc[i]
@@ -59,12 +60,26 @@ for filename in os.listdir(data_dir):
                         coral_points += 4
                     elif col == "L3":
                         coral_points += 6
-                    else:
+                    elif col == "L4":
                         coral_points += 7
+                else:
+                    # add to teleop total
+                    if col == "L1":
+                        teleop_coral_p += 2
+                    elif col == "L2":
+                        teleop_coral_p += 3
+                    elif col == "L3":
+                        teleop_coral_p += 4
+                    elif col == "L4":
+                        teleop_coral_p += 5
 
     # add coral auton point total to names and avg_values
     new_names.append("Average Coral Auton Points")
     avg_values.append(coral_points)
+
+    # add coral teleop point total
+    new_names.append("Average Coral Teleop Points")
+    avg_values.append(teleop_coral_p)
 
     teamData = pd.DataFrame([avg_values], index=[filename[:-5]], columns=new_names)
 
