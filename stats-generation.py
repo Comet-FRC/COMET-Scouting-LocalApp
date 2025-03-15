@@ -51,6 +51,7 @@ for filename in os.listdir(data_dir):
         for i in range(len(team_data[col])):
             values = team_data[col].iloc[i]
             # based on timestamp and auton timestamp, determine which were scored during auton
+            # due to this, higher prone to inaccuracy (competely depends on scout input of timestamp)
             for val in values:
                 if val < team_data["Auton Ended"].iloc[i]:
                     # add up to point total (based on coral level)
