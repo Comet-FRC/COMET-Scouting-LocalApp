@@ -6,9 +6,21 @@ import pandas as pd
 stats = pd.read_json('team_stats.json', orient='index')
 
 # Select a column to visualize
+stats_names = stats.columns
 stat_to_plot = ""
-while stat_to_plot == "" or not (stat_to_plot in stats.columns):
-    stat_to_plot = input("Enter a column name to visualize: ")
+while True:
+    for i in range(len(stats_names)):
+        print(f"{i}: {stats_names[i]}")
+    stat_to_plot = input("Enter a number of data to visualize: ")
+    try:
+        stat_to_plot = int(stat_to_plot)
+    except:
+        continue
+
+    if stat_to_plot >= 0 and stat_to_plot < len(stats_names):
+        stat_to_plot = stats_names[stat_to_plot]
+        break
+    
 
 if "Common" not in stat_to_plot:
     # Plot bar chart
