@@ -42,6 +42,7 @@ def run() :
 
             # wait for a millisecond and check if a key was pressed
             if cv2.waitKey(1) != -1:
+                exit()
                 break
 
             # check the image for a qr code
