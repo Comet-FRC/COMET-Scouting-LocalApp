@@ -31,6 +31,7 @@ for filename in os.listdir(data_dir):
     # print(len(new_names))
 
     # getting two most common tags
+    # small visual error that can be fixed
     new_names.append("Common Tags")
     twoCommonTags = team_data["Tags"].mode()[:2]
     avg_values.append(twoCommonTags)
