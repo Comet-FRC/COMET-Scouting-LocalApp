@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def run() :
+def run(single_run: bool, first_run: bool, cap=cv2.VideoCapture(0), detector=cv2.QRCodeDetector()) :
     def decodeNumber(data) :
     # create a variable to store decoded data
         decoded = 0
@@ -18,18 +18,18 @@ def run() :
     # get the qr code from the camera
 
     # initialize the camera and qrcode detector
-    cap = cv2.VideoCapture(1)
-
-    
-    detector = cv2.QRCodeDetector()
 
     # create a variable to store qr code data
     qr_data = ""
+    if not first_run :
+        timer = 10
+    else :
+        timer = 0
 
     # loop until a qr code is found
     while True:
         # read the currect camera image
-        ret, image = cap.read()
+        ret, image = cap.read() 
 
         # read the test image
         # ret = True
@@ -37,6 +37,29 @@ def run() :
 
         #  check if frame was read successfully
         if ret:
+
+            if timer > 0 :
+                timer -= 1
+
+                org = (50, 50)
+                fontFace = cv2.FONT_HERSHEY_SIMPLEX
+                fontScale = 1
+                color = (255, 0, 0)
+                thickness = 2
+                lineType = cv2.LINE_AA
+                cv2.putText(image, "Code Scanned", org, fontFace, fontScale, color, thickness, lineType)  
+            else :
+                # check the image for a qr code
+                data, bbox, _ = detector.detectAndDecode(image)
+
+                # if a qr code is found, print and store the data and stop searching
+                if data:
+                    print(data)
+                    qr_data = data
+                    break
+
+
+
             # display the current image
             cv2.imshow("QR Code Scanner", image)
 
@@ -44,23 +67,15 @@ def run() :
             if cv2.waitKey(1) != -1:
                 exit()
                 break
-
-            # check the image for a qr code
-            data, bbox, _ = detector.detectAndDecode(image)
-
-            # if a qr code is found, print and store the data and stop searching
-            if data:
-                print(data)
-                qr_data = data
-                break
         else :
             break
         
 
 
     # release the camera and close the window
-    cap.release()
-    cv2.destroyAllWindows()
+    if single_run:
+        cap.release()
+        cv2.destroyAllWindows()
 
 
     # get the data from the captured qr code
@@ -454,4 +469,4 @@ def run() :
 
 
 
-run()
+# run()
