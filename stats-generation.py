@@ -16,13 +16,13 @@ for filename in os.listdir(data_dir):
     team_data = pd.read_json(f"{data_dir}/{filename}", orient="index")
 
     # select columns to average out of the team data
-    i_columns_to_avg = [0, 1, 2, 3, 4, 5, 6, 12, 13, 14]
-    columns_to_avg = team_data.iloc[:, i_columns_to_avg]
+    i_columns_to_avg = ["L1", "L2", "L3", "L4", "Processor", "Net", "Algae Removed", "Points Scored", "Auton Points", "Teleop Points"]
+    columns_to_avg = team_data.loc[:, i_columns_to_avg]
 
     # handle list values in columns 1-6 (inclusive) by converting list-types to their length 
     for col in columns_to_avg.columns:
         if columns_to_avg[col].apply(lambda x: isinstance(x, list)).any(): # checks if any element is a list in the column 
-            columns_to_avg.loc[:, col] = columns_to_avg[col].apply(lambda x: len(x) if isinstance(x, list) else x) # if so, 
+            columns_to_avg.loc[:, col] = columns_to_avg[col].apply(lambda x: len(x) if isinstance(x, list) else x) # if so, convert to length of list
 
     # compute mean values for each column
     avg_values = columns_to_avg.mean().values.tolist()
@@ -30,15 +30,14 @@ for filename in os.listdir(data_dir):
     # print(len(avg_values))
     # print(len(new_names))
 
-    # getting two most common tags
-    # small visual error that can be fixed
-    new_names.append("Common Tags")
-    twoCommonTags = team_data["Tags"].mode()[:2]
-    avg_values.append(twoCommonTags)
-    '''for x in avg_values:
-        if isinstance(x, list):
-            print("x")
-        print(f"{x}, ", end="")'''
+    # get all tags applied 
+    new_names.append("Tag Counts:")
+    tags_applied = team_data.loc[:, "Tags"]
+    flattened = np.concatenate(tags_applied.values)
+
+    # turn all tags into sorted list of each tag count
+    counts = pd.Series(flattened).value_counts().sort_values()[::-1]
+    avg_values.append(counts)
 
     # average end position
     new_names.append("Common End Position")
