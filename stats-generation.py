@@ -31,7 +31,7 @@ for filename in os.listdir(data_dir):
     # print(len(new_names))
 
     # get all tags applied 
-    new_names.append("Tag Counts:")
+    new_names.append("Tag Counts")
     tags_applied = team_data.loc[:, "Tags"]
     flattened = np.concatenate(tags_applied.values)
 
@@ -43,11 +43,25 @@ for filename in os.listdir(data_dir):
     new_names.append("Common End Position")
     end_pos = team_data["End Position"].mode()[0]
     avg_values.append(end_pos)
-     
+
+    teleop_values = {
+        "L1": 2,
+        "L2": 3,
+        "L3": 4,
+        "L4": 5
+    }
+
+    auton_values = {
+        "L1": 3,
+        "L2": 4,
+        "L3": 6,
+        "L4": 7
+    }
+
     # get l1, l2, l3, l4 data out of team_data since columns_to_avg contains transformed data
     coral_points = 0
     teleop_coral_p = 0
-    for col in team_data.iloc[:, [0, 1, 2, 3]].columns:
+    for col in team_data.loc[:, ["L1", "L2", "L3", "L4"]].columns:
         for i in range(len(team_data[col])):
             values = team_data[col].iloc[i]
             # based on timestamp and auton timestamp, determine which were scored during auton
@@ -55,32 +69,18 @@ for filename in os.listdir(data_dir):
             for val in values:
                 if val < team_data["Auton Ended"].iloc[i]:
                     # add up to point total (based on coral level)
-                    if col == "L1":
-                        coral_points += 3
-                    elif col == "L2":
-                        coral_points += 4
-                    elif col == "L3":
-                        coral_points += 6
-                    elif col == "L4":
-                        coral_points += 7
+                    coral_points += auton_values[col]
                 else:
                     # add to teleop total
-                    if col == "L1":
-                        teleop_coral_p += 2
-                    elif col == "L2":
-                        teleop_coral_p += 3
-                    elif col == "L3":
-                        teleop_coral_p += 4
-                    elif col == "L4":
-                        teleop_coral_p += 5
+                    teleop_coral_p += teleop_values[col]
 
     # add coral auton point total to names and avg_values
     new_names.append("Average Coral Auton Points")
-    avg_values.append(coral_points)
+    avg_values.append(coral_points / len(team_data))
 
     # add coral teleop point total
     new_names.append("Average Coral Teleop Points")
-    avg_values.append(teleop_coral_p)
+    avg_values.append(teleop_coral_p / len(team_data))
 
     teamData = pd.DataFrame([avg_values], index=[filename[:-5]], columns=new_names)
 
