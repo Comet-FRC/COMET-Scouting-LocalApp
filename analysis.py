@@ -10,7 +10,7 @@ stats_names = stats.columns
 stat_to_plot = ""
 
 team_analysis = False
-team_to_analyze = -1
+team_num = -1
 
 while True:
     for i in range(len(stats_names)):
@@ -27,38 +27,36 @@ while True:
         break
     elif stat_to_plot == 14:
         while True: 
-            team_to_analyze = input("Enter the team number to run analysis of: ")
+            team_num = input("Enter the team number to run analysis of: ")
             try: 
-                team_to_analyze = int(team_to_analyze)
+                team_num = int(team_num)
             except:
                 continue
 
-            if team_to_analyze in stats.index :
+            if team_num in stats.index :
                 team_analysis = True
                 break
             else :
                 print("That's not a valid team number. Here are all the valid team numbers:")
-                for i in stats.index:
-                    print(i, end=' ')
+                print(list(stats.index))
                 print()
         break
 
 if team_analysis:
-    print(f"Analyzing team number {team_to_analyze}")
+    print(f"Analyzing team number {team_num}")
     
     # Calculate each scoring type in comparision to other teams' scoring
     comp_stat_names = ["Average L1", "Average L2", "Average L3", "Average L4", "Average Processor", "Average Net"]
-    proficiency_stats = dict(zip(comp_stat_names, (float(stats.loc[team_to_analyze, x]) for x in comp_stat_names)))
+    proficiency_stats = dict(zip(comp_stat_names, (float(stats.loc[team_num, x]) for x in comp_stat_names)))
 
-    # loop through the stat names
-    # populate an array with the average value of each stat name
+
+    # create function to remove zeroes
     a = lambda arr : arr[arr != 0]
 
+    # get the averages and standard deviations of each stat
     overall_means = [float(a(stats.loc[:, x].values).mean()) for x in comp_stat_names]
     overall_std = [float(a(stats.loc[:, x].values).std()) for x in comp_stat_names]
     
-    # print(overall_means)
-    # print(overall_std)
     import numpy as np 
 
     # find the z-score for each value
@@ -94,7 +92,7 @@ if team_analysis:
     ax2 = fig.add_subplot(2, 2, (1, 2))
     score_categories = ["Average Points Scored", "Average Teleop Points", "Average Auton Points"]
 
-    team_scores = [stats.loc[team_to_analyze, x] for x in score_categories]
+    team_scores = [stats.loc[team_num, x] for x in score_categories]
     mean_scores = [float(stats.loc[:, x].values.mean()) for x in score_categories]
     labels = ['Overall Scoring', 'Teleop Scoring', 'Auton Scoring']
     x = np.arange(len(labels))
@@ -106,7 +104,7 @@ if team_analysis:
     ax2.set_title('Average Scoring')
     ax2.legend()
 
-    team_tag_counts = stats.loc[team_to_analyze, "Tag Counts"]
+    team_tag_counts = stats.loc[team_num, "Tag Counts"]
 
     # Tag Histogram
     ax3 = fig.add_subplot(2, 2, 4)
@@ -119,11 +117,8 @@ if team_analysis:
     ax3.set_title("Common Tags")
 
 
-    # Adjust layout and display
-    plt.tight_layout()
-    
-
-    
+    # Adjust layout
+    plt.tight_layout()    
         
 elif "Common" not in stat_to_plot:
     print("Opening window...")
