@@ -11,6 +11,7 @@ response = requests.get(f"{url}?id={request_id}")
 
 print("Request received.")
 
+# store the json data in a local file
 file_path = "aws-data.json"
 
 with open(file_path, 'w') as json_file:
