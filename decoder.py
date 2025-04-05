@@ -303,6 +303,7 @@ def run(single_run: bool, first_run: bool, cap=cv2.VideoCapture(0), detector=cv2
 
     # add the team's score to the match match data JSON file
 
+    return
     # exit()
 
     # store indexes of teams that we are getting data for
@@ -338,7 +339,6 @@ def run(single_run: bool, first_run: bool, cap=cv2.VideoCapture(0), detector=cv2
         10679: 0
     }
 
-    return
 
     # turn the matches JSON to a dataframe
     try :
